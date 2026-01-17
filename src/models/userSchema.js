@@ -1,6 +1,6 @@
 
 import mongoose from "mongoose";
-
+import validator from "validator"
 
 const userSchema = new mongoose.Schema({
 
@@ -9,21 +9,40 @@ const userSchema = new mongoose.Schema({
         required : true,
         minLength : 4,
         maxLength : 10 , 
+        trim: true
     },
     lastName : {
-        type: String
+        type: String,
+        trim : true
     },
     emailID:{
         type : String,
-        require: true,
+        required: true,
         unique: true,
         trim : true,
+        validate(value){
+            if(!validator.isEmail(value)){
+                throw new Error("Email is invalid " + value);
+            }
+        }
     },
     password: {
         type : String,
+        required: true,
+        minLength : 5,
+        validate(value) {
+            if(!validator.isStrongPassword(value)){
+                throw new Error ("Password is too weak " + value)
+            }
+        }     
     },
     age: {
         type: Number,
+        validate(value){
+            if(value < 18){
+                throw new Error("user is underage for this platform")
+            }
+        }
     },
     skills : {
         type : [String],
@@ -43,9 +62,14 @@ const userSchema = new mongoose.Schema({
     },
     about : {
         type : String , 
-        default : "This is the about section of the user"
+        default : "This is the about section of the user",
+        validate(value){
+            if(value.length > 100){
+                throw new Error("Keep the about section under 100 words");
+            }
+        }
     }
-});
+} , {timestamps : true});
 
 export const User = mongoose.model("User" , userSchema);
  

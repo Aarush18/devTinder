@@ -1,4 +1,6 @@
 
+import jwt from "jsonwebtoken"
+import { User } from "../models/userSchema.js";
 export const authMiddleware = (req , res , next) => {
     const token = "xyz";
     const isAdmin = token === "xyz";
@@ -11,20 +13,29 @@ export const authMiddleware = (req , res , next) => {
     }
 }
 
-export const userAuth = (req , res , next) => {
-    const token = "xyz";
-    const isUserAuthorized = token ==="xyz";
+export const userAuth = async (req , res , next) => {
 
-    if(req.path == "/login") {
-        res.send("Not found");
-        return null
-    }
-    if(isUserAuthorized){
-        console.log("Accesss given")
+    try {
+        const {token} = req.cookies;
+        const decoded = jwt.verify(token , "tmkc" );
+
+        const userID = decoded._id;
+
+        const user = await User.findById(userID);
+
+        if(!user){
+            return res.status(404).send("User not found");
+        }
+
+        req.user = user;
+
         next();
-    }else{
-        console.error("Not authorized");
+
+    } catch (error) {
+        res.status(404).send("some error occured " + error.message)
     }
+
+    
 }
 
 // module.exports({
